@@ -1,0 +1,33 @@
+{% comment %} {% extends "main.html" %}
+{% block title %}Create News{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2>Add News</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <label>Heading</label>
+        <input type="text" name="heading" class="form-control">
+
+        <label>Heading Image</label>
+        <input type="file" name="heading_image" class="form-control">
+
+        <label>Description</label>
+        <textarea name="description" class="form-control"></textarea>
+
+        <label>Description 2</label>
+        <textarea name="description_2" class="form-control"></textarea>
+
+        <label>Published At</label>
+        <input type="datetime-local" name="published_at" class="form-control">
+
+        <label>Extra Images (multiple)</label>
+        <input type="file" name="images" class="form-control" multiple>
+
+        <br>
+        <button class="btn btn-success">Submit News</button>
+    </form>
+</div>
+
+{% endblock %} {% endcomment %}

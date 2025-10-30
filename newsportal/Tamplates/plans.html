@@ -1,0 +1,44 @@
+{% comment %} {% extends "main.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4 fw-bold">Choose Your News Subscription</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+
+            {% for plan in plans %}
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm text-center">
+
+                    <h4 class="fw-bold">{{ plan.name }}</h4>
+                    <p><strong>Price:</strong> ₹{{ plan.price }}</p>
+                    <p><strong>Duration:</strong> {{ plan.days }} Days</p>
+                    <p><strong>Features:</strong> {{ plan.features }}</p>
+
+                    <button type="submit" name="plan_slug" value="{{ plan.slug }}"
+                        class="btn 
+                        {% if plan.price == 0 %} btn-secondary {% elif forloop.counter == 2 %} btn-primary {% else %} btn-success {% endif %}
+                        "
+                        {% if plan.price == 0 %} disabled {% endif %}>
+                        
+                        {% if plan.price == 0 %}
+                            Current
+                        {% elif forloop.counter == 2 %}
+                            Buy Basic
+                        {% else %}
+                            Go Premium
+                        {% endif %}
+                    </button>
+
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </form>
+
+</div>
+{% endblock %} {% endcomment %}
