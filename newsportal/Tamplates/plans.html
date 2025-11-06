@@ -1,44 +1,114 @@
-{% comment %} {% extends "main.html" %}
+{% extends "main.html" %}
+{% load static %}
+
+{% block title %} Subscription Plans {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container my-5">
+  <h2 class="text-center mb-4">Choose a Plan</h2>
 
-    <h2 class="text-center mb-4 fw-bold">Choose Your News Subscription</h2>
+  <div class="row gy-4 justify-content-center">
+    {% for plan in plans %}
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ plan.name }}</h5>
+          <p class="card-text mb-2">{{ plan.features|linebreaksbr }}</p>
+          <p class="mb-2"><strong>Price:</strong> ₹{{ plan.price }}</p>
+          {% if plan.discount_price %}
+            <p class="mb-2 text-success"><strong>Discount:</strong> ₹{{ plan.discount_price }}</p>
+          {% endif %}
+          <p class="mb-3"><small>Duration: {{ plan.days }} days</small></p>
 
-    <form method="POST">
-        {% csrf_token %}
-        <div class="row">
-
-            {% for plan in plans %}
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm text-center">
-
-                    <h4 class="fw-bold">{{ plan.name }}</h4>
-                    <p><strong>Price:</strong> ₹{{ plan.price }}</p>
-                    <p><strong>Duration:</strong> {{ plan.days }} Days</p>
-                    <p><strong>Features:</strong> {{ plan.features }}</p>
-
-                    <button type="submit" name="plan_slug" value="{{ plan.slug }}"
-                        class="btn 
-                        {% if plan.price == 0 %} btn-secondary {% elif forloop.counter == 2 %} btn-primary {% else %} btn-success {% endif %}
-                        "
-                        {% if plan.price == 0 %} disabled {% endif %}>
-                        
-                        {% if plan.price == 0 %}
-                            Current
-                        {% elif forloop.counter == 2 %}
-                            Buy Basic
-                        {% else %}
-                            Go Premium
-                        {% endif %}
-                    </button>
-
-                </div>
-            </div>
-            {% endfor %}
-
+          <!-- Button opens modal and passes data via data-* attributes -->
+          <div class="mt-auto">
+            <button
+              class="btn btn-primary w-100 open-plan-modal"
+              data-bs-toggle="modal"
+              data-bs-target="#planModal"
+              data-slug="{{ plan.slug }}"
+              data-name="{{ plan.name }}"
+              data-price="{{ plan.price }}"
+              data-discount="{{ plan.discount_price }}"
+              data-days="{{ plan.days }}"
+              data-features="{{ plan.features|escapejs }}"
+            >
+              View & Pay
+            </button>
+          </div>
         </div>
-    </form>
-
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </div>
-{% endblock %} {% endcomment %}
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="planModal" tabindex="-1" aria-labelledby="planModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm"> <!-- modal-sm for small -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="planModalLabel">Plan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="d-flex">
+          <!-- left column: details -->
+          <div class="flex-grow-1 me-2">
+            <h6 id="modal-plan-name">Plan</h6>
+            <p id="modal-plan-features" class="small text-muted"></p>
+            <p class="mb-1"><strong>Price:</strong> <span id="modal-plan-price"></span></p>
+            <p class="mb-1 text-success" id="modal-plan-discount" style="display:none"><strong>Discount:</strong> <span></span></p>
+            <p class="mb-0"><small>Duration: <span id="modal-plan-days"></span> days</small></p>
+          </div>
+
+          <!-- right column: payment / code -->
+          <div style="min-width:110px; display:flex; align-items:center;">
+            <!-- If you have payment url, replace href to that url -->
+            <a id="modal-pay-btn" href="#" class="btn btn-success btn-sm">Pay</a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted me-auto">Secure payment</small>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS (already in main layout ideally) -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.getElementById('planModal');
+  modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget; // element that triggered modal
+    const name = button.getAttribute('data-name');
+    const price = button.getAttribute('data-price');
+    const discount = button.getAttribute('data-discount');
+    const days = button.getAttribute('data-days');
+    const features = button.getAttribute('data-features');
+    const slug = button.getAttribute('data-slug');
+
+    // Fill modal fields
+    document.getElementById('modal-plan-name').textContent = name;
+    document.getElementById('modal-plan-features').textContent = features;
+    document.getElementById('modal-plan-price').textContent = price ? '₹' + price : 'Free';
+    document.getElementById('modal-plan-days').textContent = days;
+
+    const discountEl = document.getElementById('modal-plan-discount');
+    if (discount && discount !== 'None' && discount !== 'null') {
+      discountEl.style.display = 'block';
+      discountEl.querySelector('span').textContent = '₹' + discount;
+    } else {
+      discountEl.style.display = 'none';
+    }
+
+    // Payment link: change to your payment route if exists (example: /pay/<slug>/)
+    const payBtn = document.getElementById('modal-pay-btn');
+    payBtn.href = "{% url 'plan_pay' 'SLUG_REPLACER' %}".replace('SLUG_REPLACER', slug);
+  });
+});
+</script>
+
+{% endblock %}

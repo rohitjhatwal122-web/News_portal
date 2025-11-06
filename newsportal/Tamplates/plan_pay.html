@@ -1,0 +1,27 @@
+{% extends "main.html" %}
+{% block title %} Pay for {{ plan.name }} {% endblock %}
+{% block content %}
+<div class="container my-5">
+  <div class="card shadow p-4">
+    <h3>{{ plan.name }}</h3>
+    <p>{{ plan.features|linebreaksbr }}</p>
+    <p><strong>Price:</strong> ₹{{ plan.discount_price|default:plan.price }}</p>
+
+    <form method="POST" action="" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label"><strong>Select Payment Method:</strong></label><br>
+        <select name="payment_method" class="form-select" required>
+          <option value="upi">UPI</option>
+          <option value="card">Credit/Debit Card</option>
+          <option value="netbanking">Net Banking</option>
+          <option value="wallet">Wallet</option>
+          <option value="paypal">PayPal</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-success w-100">Submit Payment</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

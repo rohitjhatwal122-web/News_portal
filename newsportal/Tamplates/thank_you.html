@@ -1,0 +1,19 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5 text-center">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-info">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  
+  <h2>Thank You!</h2>
+  <p>Your payment has been received and is under review by the admin.</p>
+  <p>You’ll be notified once it’s approved.</p>
+
+  <a href="{% url 'subscription_status' %}" class="btn btn-primary mt-3">
+    Check Subscription Status
+  </a>
+</div>
+{% endblock %}

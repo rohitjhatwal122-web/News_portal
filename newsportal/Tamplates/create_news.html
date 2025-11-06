@@ -1,33 +1,51 @@
-{% comment %} {% extends "main.html" %}
-{% block title %}Create News{% endblock %}
-{% block content %}
 
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
 <div class="container mt-5">
-    <h2>Add News</h2>
-    <form method="POST" enctype="multipart/form-data">
+    <h2>Create News</h2>
+
+
+{% if not user_has_active_plan %}
+  <div class="alert alert-warning">
+    You cannot upload news yet — your payment is still under review by the admin.
+  </div>
+{% else %}
+  <div class="alert alert-success">
+    Your payment is approved! You can now upload your news.
+  </div>
+{% endif %}
+
+ <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
         
-        <label>Heading</label>
-        <input type="text" name="heading" class="form-control">
+        <div class="form-group">
+            <label for="heading">News Heading</label>
+            <input type="text" name="heading" id="heading" class="form-control" required>
+        </div>
 
-        <label>Heading Image</label>
-        <input type="file" name="heading_image" class="form-control">
+        <div class="form-group mt-3">
+            <label for="heading_image">Heading Image</label>
+            <input type="file" name="heading_image" id="heading_image" class="form-control" accept="image/*" required>
+        </div>
 
-        <label>Description</label>
-        <textarea name="description" class="form-control"></textarea>
+        <div class="form-group mt-3">
+            <label for="description">Description</label>
+            <textarea name="description" id="description" class="form-control" rows="5" required></textarea>
+        </div>
 
-        <label>Description 2</label>
-        <textarea name="description_2" class="form-control"></textarea>
+        <div class="form-group mt-3">
+            <label for="description_2">More Description</label>
+            <textarea name="description_2" id="description_2" class="form-control" rows="4"></textarea>
+        </div>
 
-        <label>Published At</label>
-        <input type="datetime-local" name="published_at" class="form-control">
+        <div class="form-group mt-3">
+            <label for="published_at">Publish Date & Time</label>
+            <input type="datetime-local" name="published_at" id="published_at" class="form-control" required>
+        </div>
 
-        <label>Extra Images (multiple)</label>
-        <input type="file" name="images" class="form-control" multiple>
-
-        <br>
-        <button class="btn btn-success">Submit News</button>
+        <button type="submit" class="btn btn-primary mt-4">Submit News</button>
     </form>
 </div>
-
-{% endblock %} {% endcomment %}
+{% endblock %}

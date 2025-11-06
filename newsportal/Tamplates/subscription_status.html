@@ -1,0 +1,31 @@
+{% extends 'main.html' %}
+{% block content %}
+
+<div class="container mt-4">
+  <h2>Subscription Status</h2>
+
+  {% if subscription %}
+    {% if not subscription.is_approved %}
+      <div class="alert alert-warning">
+        Your payment is under review by admin. Please wait for approval.
+      </div>
+    {% else %}
+      <div class="alert alert-success">
+        Your payment is approved! You can upload news now.
+      </div>
+    {% endif %}
+
+    <ul class="list-group mt-3">
+      <li class="list-group-item"><b>Plan:</b> {{ subscription.plan.name }}</li>
+      <li class="list-group-item"><b>Status:</b> {{ subscription.status }}</li>
+      <li class="list-group-item"><b>Payment Status:</b> {{ subscription.payment_status }}</li>
+      <li class="list-group-item"><b>Enrolled At:</b> {{ subscription.enrolled_at }}</li>
+    </ul>
+  {% else %}
+    <div class="alert alert-info">
+      You don’t have an active subscription. <a href="{% url 'buy_plan' %}">Buy a plan now</a>.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
