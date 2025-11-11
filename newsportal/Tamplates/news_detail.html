@@ -13,5 +13,25 @@
       <p>{{ news.description_2 }}</p>
     </div>
   </div>
+ <h3>Other News</h3>
+<div class="row">
+  {% for n in allnews %}
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        {% if n.heading_image %}
+          <img src="{{ n.heading_image.url }}" class="card-img-top" alt="{{ n.heading }}">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ n.heading|truncatechars:50 }}</h5>
+          <p class="card-text">{{ n.description|truncatechars:100 }}</p>
+          <a href="{% url 'news_detail' n.id %}" class="btn btn-primary">Read More</a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p>No other news available</p>
+  {% endfor %}
+</div>
+
 </div>
 {% endblock %}

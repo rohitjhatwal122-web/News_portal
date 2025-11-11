@@ -1,4 +1,3 @@
-
 {% extends 'main.html' %}
 {% load static %}
 
@@ -6,18 +5,17 @@
 <div class="container mt-5">
     <h2>Create News</h2>
 
+    {% if not user_has_active_plan %}
+        <div class="alert alert-warning">
+            You cannot upload news yet — your payment is still under review by the admin.
+        </div>
+    {% else %}
+        <div class="alert alert-success">
+            Your payment is approved! You can now upload your news.
+        </div>
+    {% endif %}
 
-{% if not user_has_active_plan %}
-  <div class="alert alert-warning">
-    You cannot upload news yet — your payment is still under review by the admin.
-  </div>
-{% else %}
-  <div class="alert alert-success">
-    Your payment is approved! You can now upload your news.
-  </div>
-{% endif %}
-
- <form method="POST" action="" enctype="multipart/form-data">
+    <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
         
         <div class="form-group">
@@ -44,6 +42,20 @@
             <label for="published_at">Publish Date & Time</label>
             <input type="datetime-local" name="published_at" id="published_at" class="form-control" required>
         </div>
+
+        <!-- ✅ Static Category Dropdown -->
+       <div class="form-group mt-3">
+    <label for="category">Select Category</label>
+    <select name="category" id="category" class="form-control" required>
+        <option value="">-- Choose Category --</option>
+        {% for cat in category_choices %}
+            <option value="{{ cat }}">{{ cat }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+
 
         <button type="submit" class="btn btn-primary mt-4">Submit News</button>
     </form>

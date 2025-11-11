@@ -1,0 +1,47 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ category.name }}</h2>
+    <p>Showing {{ news_list.paginator.count }} articles</p>
+
+    {% if news_list %}
+        <div class="row">
+            {% for news in news_list %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <img src="{{ news.heading_image.url }}" class="card-img-top" alt="{{ news.heading|slice:":50" }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ news.heading }}</h5>
+                            <p class="card-text">{{ news.description|truncatewords:25 }}</p>
+                            <a href="{% url 'news:news_detail' news.id %}" class="btn btn-sm btn-primary">Read</a>
+                        </div>
+                        <div class="card-footer text-muted">
+                            {{ news.published_at|date:"d M Y, H:i" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if news_list.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ news_list.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                {% for num in news_list.paginator.page_range %}
+                    <li class="page-item {% if news_list.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                {% if news_list.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ news_list.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    {% else %}
+        <div class="alert alert-info">No articles found in this category yet.</div>
+    {% endif %}
+</div>
+{% endblock %}
