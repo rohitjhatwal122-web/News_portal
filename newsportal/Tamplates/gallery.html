@@ -1,0 +1,22 @@
+{% extends "main.html" %}
+
+{% block content %}
+<h1 class="text-center mb-4">All News Videos</h1>
+
+<div class="row">
+  {% for video in videos %}
+  <div class="col-md-4 mb-4">
+    <div class="card">
+      <video class="card-img-top" controls>
+        <source src="{{ video.video_file.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div class="card-body">
+        <h5 class="card-title">{{ video.title }}</h5>
+        <p class="card-text">{{ video.description|truncatewords:15 }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

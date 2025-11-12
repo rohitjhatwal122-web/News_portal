@@ -70,3 +70,12 @@ class CustomUserAdmin(BaseUserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(UserProfile)
+
+
+
+from .models import NewsVideo
+
+@admin.register(NewsVideo)
+class NewsVideoAdmin(admin.ModelAdmin):
+    list_display = ('title', 'uploaded_at')
+    search_fields = ('title',)

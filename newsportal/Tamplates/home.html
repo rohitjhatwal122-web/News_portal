@@ -5,6 +5,24 @@
 {% block content %}
 <div class="container my-5">
 
+  <!-- 🌟 Featured News Videos Section -->
+  {% if featured_video %}
+  <div class="mb-5">
+    <h2 class="text-center mb-3">🎬 Featured News Video</h2>
+    <div class="text-center mb-3">
+      <video width="80%" height="400" controls class="rounded shadow-sm">
+        <source src="{{ featured_video.video_file.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <h4 class="mt-2">{{ featured_video.title }}</h4>
+      <p>{{ featured_video.description|truncatewords:20 }}</p>
+    </div>
+    <div class="text-center mb-5">
+      <a href="{% url 'video_gallery' %}" class="btn btn-primary">See All News Videos</a>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- 🌟 Hero Section -->
   {% if hero_news %}
   <div id="heroCarousel" class="carousel slide mb-5 shadow" data-bs-ride="carousel">
@@ -36,29 +54,12 @@
   <p class="text-muted text-center">No featured news available.</p>
   {% endif %}
 
-
-  <!-- 🔍 Search Bar -->
-  {% comment %} <form method="get" action="{% url 'home' %}" class="d-flex mb-4 justify-content-center flex-wrap">
-    <select name="category" class="form-select me-2 mb-2" style="max-width: 200px;">
-      <option value="">All Categories</option>
-      {% for cat in categories %}
-        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
-      {% endfor %}
-    </select>
-
-    <input type="text" name="q" value="{{ query }}" class="form-control me-2 mb-2" placeholder="Search news...">
-    <button type="submit" class="btn btn-primary mb-2">Search</button>
-  </form> {% endcomment %}
-
-
   <!-- 🔹 Slim Category Scroll Bar (YouTube style) -->
   <div class="bg-light py-1 mb-3 border-top border-bottom shadow-sm" 
        style="white-space: nowrap; border-bottom: 3px solid #ccc;">
     <div class="d-flex overflow-auto px-2" style="gap: 0.4rem;">
       <a href="{% url 'home' %}" 
-         class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
-         All
-      </a>
+         class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
       {% for cat in categories %}
         <a href="?category={{ cat }}" 
            class="btn btn-sm {% if cat == selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
@@ -67,8 +68,6 @@
       {% endfor %}
     </div>
   </div>
-
-
 
   <!-- 👤 User Greeting -->
   {% if user.is_authenticated %}
@@ -102,9 +101,7 @@
           {% if user_has_active_plan %}
             <a href="{% url 'news_detail' news.id %}" class="btn btn-primary w-100">Read More</a>
           {% else %}
-            <a href="{% url 'user_table' %}" class="btn btn-secondary w-100">
-              Activate Plan to Read
-            </a>
+            <a href="{% url 'user_table' %}" class="btn btn-secondary w-100">Activate Plan to Read</a>
           {% endif %}
         </div>
       </div>

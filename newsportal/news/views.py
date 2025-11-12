@@ -17,6 +17,8 @@ from django.http import HttpResponse
 from django.utils import timezone
 from .models import NewsTable,  SubscriptionTable
 from django.core.paginator import Paginator
+from django.db.models import Q
+
 
 # ================================register view=====================================
 
@@ -297,8 +299,8 @@ def home(request):
 
 
 def send_test_email(request):
-    subject = "Test Email from Django"
-    message = "abcdeefghijklmnopqrstuvwxyz ."
+    subject = "Test Django"
+    message = "abcdeefghifghjkjklmnopqrstuvwxyz ."
     from_email = settings.EMAIL_HOST_USER
     recipient_list = ["rohitjhatwal230@gmail.com"]
 
@@ -387,3 +389,19 @@ def search_news(request):
         'query': query,
         'results': results
     })
+
+
+
+# ==================================NewsVideo========================
+from django.shortcuts import render
+from .models import NewsVideo
+
+def news_video(request):
+    videos = NewsVideo.objects.order_by('-uploaded_at')
+    featured_video = videos.first() if videos else None
+    return render(request, 'home.html', {'featured_video': featured_video})
+
+# Gallery page view - show all videos
+def video_gallery(request):
+    videos = NewsVideo.objects.order_by('-uploaded_at')
+    return render(request, 'gallery.html', {'videos': videos})
