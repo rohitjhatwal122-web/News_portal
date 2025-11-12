@@ -74,7 +74,7 @@
   {% if user.is_authenticated %}
     <h2>Welcome, {{ request.user.first_name }} {% if request.user.userprofile %}{{ request.user.userprofile.role }}{% endif %} 👋</h2>
   {% else %}
-    <p>Welcome, Guest!</p>
+    <p>Welcome, Guest</p>
   {% endif %}
 
   <hr class="my-5">
