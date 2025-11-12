@@ -14,10 +14,8 @@ urlpatterns = [
     path('thank_you/', thank_you, name='thank_you'),
    path('subscription/status/', subscription_status, name='subscription_status'),
    path('create-news/', create_news, name='create_news'),
-path('news/<int:news_id>/', news_detail, name='news_detail'),    
+    path('news/<int:news_id>/', news_detail, name='news_detail'),    
     path('send-mail/', send_test_email, name='send_mail'),
-    #  path('category/<int:cat_id>/', category_news_list, name='category_news'),
-    # optional: slug version:
-    # path('category/slug/<slug:slug>/', category_news_by_slug, name='category_news_by_slug'),
+    path('search/', search_news, name='search_news'),
 ]
 

@@ -3,35 +3,75 @@
 
 {% block content %}
 <div class="container my-5">
-  <div class="card shadow">
-    <img src="{{ news.heading_image.url }}" class="card-img-top" alt="{{ news.heading }}">
+
+  <!-- 📰 Main News Section -->
+  <div class="card shadow mb-5">
+    {% if news.heading_image %}
+      <img src="{{ news.heading_image.url }}" class="card-img-top" alt="{{ news.heading }}">
+    {% endif %}
     <div class="card-body">
       <h2 class="card-title">{{ news.heading }}</h2>
-      <p class="text-muted">By {{ news.author.username }} — {{ news.published_at }}</p>
+      <p class="text-muted">
+        By {{ news.author.username }} — {{ news.published_at|date:"F j, Y" }}
+      </p>
       <hr>
-      <p>{{ news.description }}</p>
-      <p>{{ news.description_2 }}</p>
+      <p>{{ news.description|linebreaks }}</p>
+      <p>{{ news.description_2|linebreaks }}</p>
     </div>
   </div>
- <h3>Other News</h3>
-<div class="row">
-  {% for n in allnews %}
-    <div class="col-md-4 mb-3">
-      <div class="card h-100">
-        {% if n.heading_image %}
-          <img src="{{ n.heading_image.url }}" class="card-img-top" alt="{{ n.heading }}">
-        {% endif %}
-        <div class="card-body">
-          <h5 class="card-title">{{ n.heading|truncatechars:50 }}</h5>
-          <p class="card-text">{{ n.description|truncatechars:100 }}</p>
-          <a href="{% url 'news_detail' n.id %}" class="btn btn-primary">Read More</a>
+
+  <!-- 🗂️ Related News Section -->
+  <h3 class="mb-4 text-center">Other {{ news.category }} News</h3>
+
+  <div class="row">
+    {% for n in page_obj %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          {% if n.heading_image %}
+            <img src="{{ n.heading_image.url }}" class="card-img-top" alt="{{ n.heading }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ n.heading|truncatechars:50 }}</h5>
+            <p class="card-text">{{ n.description|truncatechars:100 }}</p>
+            <a href="{% url 'news_detail' n.id %}" class="btn btn-primary btn-sm w-100">Read More</a>
+          </div>
         </div>
       </div>
-    </div>
-  {% empty %}
-    <p>No other news available</p>
-  {% endfor %}
-</div>
+    {% empty %}
+      <p class="text-center text-muted">No other news available in this category.</p>
+    {% endfor %}
+  </div>
+
+  <!-- 🔢 Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
 
 </div>
 {% endblock %}

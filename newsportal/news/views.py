@@ -14,7 +14,11 @@ from .models import NewsTable, SubscriptionTable
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponse
+from django.utils import timezone
+from .models import NewsTable,  SubscriptionTable
+from django.core.paginator import Paginator
 
+# ================================register view=====================================
 
 def register(request):
     if request.method == "POST":
@@ -54,7 +58,7 @@ def register(request):
 
     return render(request, 'register.html')
 
-
+# ===============================================login view=====================================
 
 def user_login(request):
     if request.method == "POST":
@@ -78,7 +82,7 @@ def user_login(request):
 
 
 
-
+# ===============================logout view=====================================
 
 
 def user_logout(request):
@@ -86,11 +90,13 @@ def user_logout(request):
     messages.success(request, "Logged out successfully!")
     return redirect('login')
 
-
+# ================================user_table view=====================================
 
 def user_table(request):
     plans = SubscriptionPlans.objects.all()
     return render(request, 'plans.html', {'plans': plans})
+
+# ================================home view=====================================
 
 def home(request):
     news_list = NewsTable.objects.filter(is_deleted=False)
@@ -110,7 +116,7 @@ def home(request):
 
 
 
-
+# ================================user_table view=====================================
 
 def user_table(request):
     user_has_active_plan = SubscriptionTable.objects.filter(
@@ -127,16 +133,15 @@ def user_table(request):
         return redirect("create_news")  # Corrected the redirect statement
 
 
-
-
-
-
+# ==================================subscription_plans view=====================================
 
 
 @login_required(login_url='login')
 def subscription_plans(request):
     plans = SubscriptionPlans.objects.filter(is_active=True)
     return render(request, 'plans.html', {'plans': plans})
+
+# ================================plan_pay view===================================
 
 
 @login_required(login_url='login')
@@ -163,6 +168,9 @@ def plan_pay(request, slug):
     return render(request, 'plan_pay.html', {'plan': plan})
 
 
+
+# ==============================================thank_you view===================================
+
 @login_required(login_url='login')
 def thank_you(request):
     messages.info(request, "Your plan enrollment request has been sent to admin.")
@@ -171,58 +179,18 @@ def thank_you(request):
 
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from .models import NewsTable,  SubscriptionTable
 
-# @login_required
-# def create_news(request):
-#     # Check if the user's subscription is approved
-#     subscription = SubscriptionTable.objects.filter(user=request.user, is_approved=True, status='active').last()
-
-#     if not subscription:
-#         messages.error(request, "Your subscription is not approved yet. Please wait for admin approval.")
-#         return redirect('subscription_status')  # redirect to a page showing their current subscription
-
-#     # Fetch categories to pass to template
-    
-
-#     if request.method == 'POST':
-#         heading = request.POST.get('heading')
-#         description = request.POST.get('description')
-#         description_2 = request.POST.get('description_2')
-#         heading_image = request.FILES.get('heading_image')
-#         published_at = request.POST.get('published_at')
-#         category_id = request.POST.get('category')
-
-        
-
-#         NewsTable.objects.create(
-#             heading=heading,
-#             description=description,
-#             description_2=description_2,
-#             heading_image=heading_image,
-#             author=request.user,
-#             published_at=published_at,
-            
-#         )
-
-#         messages.success(request, "✅ News uploaded successfully!")
-#         return redirect('dashboard')
-
-#     return render(request, 'create_news.html', {
-        
-#     })
-
-
+# ==============================================subscription_status view===================================
 
 
 @login_required
 def subscription_status(request):
     subscription = SubscriptionTable.objects.filter(user=request.user).last()
     return render(request, 'subscription_status.html', {'subscription': subscription})
+
+
+
+# ==================================create_news view=========================================
 
 
 @login_required(login_url='login')
@@ -269,23 +237,60 @@ def create_news(request):
     return render(request, 'create_news.html', {'user_has_active_plan': user_has_active_plan, 'category_choices': category_choices})
 
 
-
-
-
+# =============================================home view=========================================
 @login_required(login_url='login')
 def home(request):
-    news_list = NewsTable.objects.filter(is_deleted=False).order_by('-published_at')
-    hero_news = NewsTable.objects.filter(is_featured=True, is_deleted=False).order_by('-published_at')[:3]
+    # 🔹 Step 1: Get search query and category from URL
+    query = request.GET.get('q', '').strip()
+    selected_category = request.GET.get('category', '').strip()
+
+    # 🔹 Step 2: Start with all news
+    news_list = NewsTable.objects.filter(is_deleted=False)
+
+    # 🔹 Step 3: Filter by category (if selected)
+    if selected_category:
+        news_list = news_list.filter(category__iexact=selected_category)
+
+    # 🔹 Step 4: Filter by search query (if any)
+    if query:
+        news_list = news_list.filter(
+            Q(heading__icontains=query) |
+            Q(description__icontains=query) |
+            Q(description_2__icontains=query) |
+            Q(category__icontains=query)
+        )
+
+    # 🔹 Step 5: Order by latest published
+    news_list = news_list.order_by('-published_at')
+
+    # 🔹 Step 6: Hero section news
+    hero_news = NewsTable.objects.filter(
+        is_featured=True, is_deleted=False
+    ).order_by('-published_at')[:3]
+
+    # 🔹 Step 7: Check if user has active plan
     user_has_active_plan = SubscriptionTable.objects.filter(
         user=request.user,
         payment_status='paid',
         status='active'
     ).exists()
 
+    # 🔹 Step 8: Pagination
+    paginator = Paginator(news_list, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 🔹 Step 9: Get categories from model choices
+    categories = [c[0] for c in NewsTable._meta.get_field('category').choices]
+
+    # 🔹 Step 10: Render
     return render(request, 'home.html', {
-        'news_list': news_list,
         'hero_news': hero_news,
-        'user_has_active_plan': user_has_active_plan
+        'page_obj': page_obj,
+        'categories': categories,
+        'selected_category': selected_category,
+        'query': query,
+        'user_has_active_plan': user_has_active_plan,
     })
 
 # =============================gmail test view=============================
@@ -307,47 +312,11 @@ def send_test_email(request):
 
 
 
-
-
-
-
-# from django.core.paginator import Paginator
-# def category_news_list(request, cat_id):
-#     # get the category or 404
-#     category = get_object_or_404(NewsCategory, id=cat_id)
-
-#     # filter news: not deleted, same category, published_at <= now
-#     news_qs = NewsTable.objects.filter(
-#         is_deleted=False,
-#         category=category,
-#         published_at__lte=timezone.now()
-#     ).order_by('-published_at')
-
-#     # paginator (12 per page as you used earlier)
-#     paginator = Paginator(news_qs, 12)
-#     page = request.GET.get('page')
-#     news_list = paginator.get_page(page)
-
-#     return render(request, 'news/category_list.html', {
-#         'category': category,
-#         'news_list': news_list,
-#     })
-
-
-# Optional: if you add a slug field to categories, use this view:
-# def category_news_by_slug(request, slug):
-#     category = get_object_or_404(NewsCategory, slug=slug)  # requires slug field
-#     news_qs = NewsTable.objects.filter(is_deleted=False, category=category, published_at__lte=timezone.now()).order_by('-published_at')
-#     paginator = Paginator(news_qs, 12)
-#     news_list = paginator.get_page(request.GET.get('page'))
-#     return render(request, 'newss/category_list.html', {'category': category, 'news_list': news_list})
-
-
-
+# ========================================news_detail=========================================
 
 @login_required(login_url='login')
 def news_detail(request, news_id):
-    # If user does not have an active paid subscription, redirect to plans page
+    # ✅ Check if user has active paid plan
     user_has_active_plan = SubscriptionTable.objects.filter(
         user=request.user,
         payment_status='paid',
@@ -356,10 +325,65 @@ def news_detail(request, news_id):
 
     if not user_has_active_plan:
         messages.warning(request, "Please activate a plan to read the full article.")
-        return redirect('user_table')   # this name is your plans page (in urls.py you used name='user_table')
+        return redirect('user_table')
 
-    # user has active plan → show the full news
+    # ✅ Get the current news
     news = get_object_or_404(NewsTable, id=news_id, is_deleted=False)
-    allnews = NewsTable.objects.filter(is_deleted=False).order_by('-published_at')
-    return render(request, 'news_detail.html', {'news': news, 'allnews': allnews})
 
+    # ✅ Get related news from same category (excluding current one)
+    related_news = NewsTable.objects.filter(
+        is_deleted=False,
+        category=news.category
+    ).exclude(id=news.id).order_by('-published_at')
+
+    # ✅ Pagination: 6 related news per page
+    paginator = Paginator(related_news, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'news_detail.html', {
+        'news': news,
+        'page_obj': page_obj,
+        'user_has_active_plan': user_has_active_plan
+    })
+
+
+
+# ==================================search news view=========================================
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import NewsTable
+from rapidfuzz import fuzz
+
+def search_news(request):
+    query = request.GET.get('q', '').strip()
+    results = []
+
+    if query:
+        all_news = NewsTable.objects.filter(is_deleted=False)
+        matched_news = []
+
+        for n in all_news:
+            # Har field ke liye similarity check
+            score = max(
+                fuzz.partial_ratio(query.lower(), n.heading.lower()),
+                fuzz.partial_ratio(query.lower(), n.description.lower()),
+                fuzz.partial_ratio(query.lower(), n.description_2.lower())
+            )
+            # Agar match 70% ya usse zyada hai to include karo
+            if score >= 50:
+                matched_news.append((n, score))
+
+        # Sort by best match first
+        matched_news.sort(key=lambda x: x[1], reverse=True)
+        results = [n for n, score in matched_news[:20]]
+
+        # 🔹 AJAX request ke liye (live search)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            data = [{'id': n.id, 'heading': n.heading} for n in results]
+            return JsonResponse({'results': data})
+
+    return render(request, 'search_results.html', {
+        'query': query,
+        'results': results
+    })

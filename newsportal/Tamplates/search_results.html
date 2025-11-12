@@ -1,0 +1,38 @@
+{% extends "main.html" %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h3 class="mb-4">Search Results for: "<strong>{{ query }}</strong>"</h3>
+
+  {% if suggestion and suggestion != query %}
+    <p class="text-muted">
+      Did you mean: 
+      <a href="?q={{ suggestion }}" class="text-decoration-none fw-semibold text-primary">
+        {{ suggestion }}
+      </a> ?
+    </p>
+  {% endif %}
+
+  {% if results %}
+  <div class="row">
+    {% for news in results %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        {% if news.heading_image %}
+          <img src="{{ news.heading_image.url }}" class="card-img-top" alt="{{ news.heading }}">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ news.heading|truncatechars:60 }}</h5>
+          <p class="card-text">{{ news.description|truncatechars:100 }}</p>
+          <a href="{% url 'news_detail' news.id %}" class="btn btn-primary btn-sm">Read More</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted">No news found matching your search.</p>
+  {% endif %}
+</div>
+{% endblock %}
