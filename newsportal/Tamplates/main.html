@@ -15,14 +15,10 @@
       from { opacity: 0; transform: translateY(-5px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .dropdown-item:hover {
-      background-color: #f0f4ff;
-    }
+    .dropdown-item:hover { background-color: #f0f4ff; }
 
     /* 🔍 Search bar styling */
-    .search-form {
-      position: relative;
-    }
+    .search-form { position: relative; }
     .search-form .form-control {
       border-radius: 25px;
       padding-left: 15px;
@@ -55,8 +51,26 @@
       padding: 8px 15px;
       cursor: pointer;
     }
-    #suggestionList li:hover {
-      background-color: #f5f5f5;
+    #suggestionList li:hover { background-color: #f5f5f5; }
+
+    /* 🌟 Sticky footer layout */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    main {
+      flex: 1; /* grows to push footer down */
+    }
+    footer {
+      background-color: #222;
+      color: #fff;
+      text-align: center;
+      padding: 15px 0;
     }
   </style>
 </head>
@@ -66,7 +80,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="{% url 'home' %}">📰 News Portal</a>
-
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
       data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
       aria-label="Toggle navigation">
@@ -75,23 +88,31 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'home' %}">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link btn btn-primary text-white" href="{% url 'video_gallery' %}">All News Videos</a>
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link btn btn-primary text-white" href="{% url 'video_gallery' %}">All News Videos</a></li>
+{% if request.user.userprofile.role == "Editor" or request.user.userprofile.role == "Journalist" %}
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" id="newsDropdown" role="button"
+         data-bs-toggle="dropdown" aria-expanded="false">
+       Upload News
+      </a>
+
+      <ul class="dropdown-menu" aria-labelledby="newsDropdown">
+        <li>
+          <a class="dropdown-item" href="{% url 'user_table' %}">Upload News</a>
         </li>
         <li>
-          <a class="nav-link" href="{% url 'user_table' %}">Upload News</a>
+          <a class="dropdown-item" href="{% url 'upload_video' %}">Upload Video news</a>
+        </li>
       </ul>
+    </li>
+{% endif %}
 
       <!-- 🔍 YouTube-style Search Bar -->
       <form id="searchForm" class="d-flex ms-3 search-form" role="search" action="{% url 'search_news' %}" method="get">
         <input class="form-control me-2" type="search" id="searchInput" name="q" placeholder="Search news..."
                value="{{ request.GET.q }}" aria-label="Search" autocomplete="off">
-        <button class="btn btn-light" type="submit">
-          <i class="bi bi-search"></i>
-        </button>
+        <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
         <ul id="suggestionList" class="list-group"></ul>
       </form>
 
@@ -102,13 +123,11 @@
            data-bs-toggle="dropdown" aria-expanded="false">
           <i class="bi bi-person-circle fs-3"></i>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" 
-            aria-labelledby="userMenu" style="min-width: 220px;">
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenu" style="min-width: 220px;">
           <li class="dropdown-header text-center">
             <strong>{{ request.user.first_name|default:request.user.username }}</strong>
           </li>
           <li><hr class="dropdown-divider"></li>
-          
           <li>
             <a class="dropdown-item d-flex align-items-center text-danger" href="{% url 'logout' %}">
               <i class="bi bi-box-arrow-right me-2"></i> Logout
@@ -127,10 +146,13 @@
   </div>
 </nav>
 
-{% block content %}{% endblock %}
+<!-- 🌟 Main Content -->
+<main>
+  {% block content %}{% endblock %}
+</main>
 
 <!-- Footer -->
-<footer class="bg-dark text-light text-center py-3 mt-4">
+<footer>
   <p class="mb-0">© 2025 News Portal | All Rights Reserved</p>
 </footer>
 
@@ -144,14 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   searchInput.addEventListener('input', function() {
     const query = this.value.trim();
-    if (query.length === 0) {
-      suggestionList.style.display = 'none';
-      return;
-    }
+    if (!query) { suggestionList.style.display = 'none'; return; }
 
-    fetch(`/search/?q=${query}`, {
-      headers: {'X-Requested-With': 'XMLHttpRequest'}
-    })
+    fetch(`/search/?q=${query}`, { headers: {'X-Requested-With': 'XMLHttpRequest'} })
     .then(response => response.json())
     .then(data => {
       suggestionList.innerHTML = '';
@@ -160,15 +177,11 @@ document.addEventListener('DOMContentLoaded', function() {
           const li = document.createElement('li');
           li.textContent = item.heading;
           li.className = 'list-group-item list-group-item-action';
-          li.addEventListener('click', () => {
-            window.location.href = `/news/${item.id}/`;
-          });
+          li.addEventListener('click', () => { window.location.href = `/news/${item.id}/`; });
           suggestionList.appendChild(li);
         });
         suggestionList.style.display = 'block';
-      } else {
-        suggestionList.style.display = 'none';
-      }
+      } else { suggestionList.style.display = 'none'; }
     })
     .catch(err => console.error(err));
   });

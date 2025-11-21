@@ -1,22 +1,130 @@
 {% extends "main.html" %}
+{% load static %}
+{% block title %}gallery{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">All News Videos</h1>
+<style>
+.video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  max-width: 900px;
+  margin: 0 auto;
+}
 
-<div class="row">
-  {% for video in videos %}
-  <div class="col-md-4 mb-4">
-    <div class="card">
-      <video class="card-img-top" controls>
-        <source src="{{ video.video_file.url }}" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-      <div class="card-body">
-        <h5 class="card-title">{{ video.title }}</h5>
-        <p class="card-text">{{ video.description|truncatewords:15 }}</p>
+.video-item {
+  display: flex;
+  gap: 20px;
+  {% comment %} border: 2px solid #ccc; {% endcomment %}
+  padding: 15px;
+  border-radius: 8px;
+  align-items: flex-start;
+  background-color: #fafafa;
+  cursor: pointer;
+}
+
+.video-item:hover {
+  background-color: #f1f1f1;
+}
+
+.video-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-details h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.video-details p {
+  margin: 5px 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.video-details .meta {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 5px;
+}
+
+.video-thumb {
+  width: 300px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.video-thumb video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 5px;
+}
+
+/* Description limit */
+.limit-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.word-break {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .video-item {
+    flex-direction: column;
+    align-items: center;
+  }
+  .video-thumb {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">All News Videos</h1>
+
+  <div class="video-list">
+    {% for video in videos %}
+      <!-- Card clickable -->
+      <div class="video-item" onclick="window.location.href='{% url 'video_detail' video.id %}'">
+
+        <div class="video-details">
+          <h2>{{ video.title }}</h2>
+
+          {% if video.description %}
+            <p class="video-description limit-text word-break">
+              {{ video.description }}
+            </p>
+          {% endif %}
+
+          <p class="meta">
+            By {{ video.author }} | {{ video.uploaded_at|date:"d M, Y H:i" }}
+          </p>
+        </div>
+
+        <div class="video-thumb">
+          <!-- Video plays normally -->
+          <video 
+            src="{{ video.video_file.url }}" 
+            controls
+            onclick="event.stopPropagation()"
+            poster="{% if video.thumbnail %}{{ video.thumbnail.url }}{% else %}{{ video.video_file.url }}{% endif %}">
+          </video>
+        </div>
+
       </div>
-    </div>
+    {% empty %}
+      <p class="text-center">No videos available.</p>
+    {% endfor %}
   </div>
-  {% endfor %}
 </div>
 {% endblock %}

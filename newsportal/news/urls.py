@@ -19,7 +19,12 @@ urlpatterns = [
     path('search/', search_news, name='search_news'),
         path('videos/', news_video, name='news_video'),
         path('video_gallery/', video_gallery, name='video_gallery'),
-        
-
+        path('video/<int:video_id>/', video_detail, name='video_detail'),
+        path('videos/', video_list, name='video_list'),
+        path('forgot-password/', forgot_password, name='forgot_password'),
+    path('verify-otp/', verify_otp, name='verify_otp'),
+    path('reset-password/', reset_password, name='reset_password'),
+    path('upload_video/', upload_video, name='upload_video'),
 ]
+
 

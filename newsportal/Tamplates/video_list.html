@@ -1,0 +1,87 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %}video_list{% endblock %}
+
+{% block content %}
+
+<style>
+.video-box {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.video-box:hover {
+    background: #f3f3f3;
+}
+
+.left-section {
+    width: 60%;
+}
+
+.left-section h3 {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.left-section .desc {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.left-section .meta {
+    font-size: 14px;
+    color: #777;
+    margin-top: 8px;
+}
+
+.right-section {
+    width: 35%;
+}
+
+.right-section video {
+    width: 100%;
+    height: 190px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+</style>
+
+<div class="container my-5">
+    <h2 class="text-center mb-4">🎬 All Videos</h2>
+
+    {% for video in videos %}
+    <div class="video-box" onclick="window.location.href='{% url 'video_detail' video.id %}'">
+
+        <!-- LEFT -->
+        <div class="left-section">
+            <h1>{{ video.title }}</h1>
+
+            <p class="desc">{{ video.description|truncatewords:25 }}</p>
+
+            <p class="meta">
+                By <strong>{{ video.author }}</strong> •
+                {{ video.uploaded_at|date:"d M Y" }} • 
+                {{ video.uploaded_at|time:"h:i A" }}
+            </p>
+        </div>
+
+        <!-- RIGHT (Clickable video) -->
+        <div class="right-section">
+            <video controls onclick="event.stopPropagation()">
+                <source src="{{ video.video_file.url }}" type="video/mp4">
+            </video>
+        </div>
+
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

@@ -10,11 +10,20 @@
       <img src="{{ news.heading_image.url }}" class="card-img-top" alt="{{ news.heading }}">
     {% endif %}
     <div class="card-body">
-      <h2 class="card-title">{{ news.heading }}</h2>
-      <p class="text-muted">
-        By {{ news.author.username }} — {{ news.published_at|date:"F j, Y" }}
+      <h2 class="card-title mb-2">{{ news.heading }}</h2>
+
+      <!-- 🕒 Author + Date + Time -->
+      <p class="text-muted mb-3" style="font-size: 0.95rem;">
+        <i class="bi bi-person"></i> {{ news.author.get_full_name|default:news.author.username }}
+        <span class="mx-1">|</span>
+        <i class="bi bi-calendar3"></i> {{ news.published_at|date:"F j, Y" }}
+        <span class="mx-1">|</span>
+        <i class="bi bi-clock"></i> {{ news.published_at|time:"h:i A" }}
       </p>
+
       <hr>
+
+      <!-- 📝 Full Description -->
       <p>{{ news.description|linebreaks }}</p>
       <p>{{ news.description_2|linebreaks }}</p>
     </div>
@@ -32,6 +41,11 @@
           {% endif %}
           <div class="card-body">
             <h5 class="card-title">{{ n.heading|truncatechars:50 }}</h5>
+            <p class="card-text text-muted small mb-1">
+              <i class="bi bi-calendar3"></i> {{ n.published_at|date:"d M Y" }}
+              <span class="mx-1">|</span>
+              <i class="bi bi-person"></i> {{ n.author.get_full_name|default:n.author.username }}
+            </p>
             <p class="card-text">{{ n.description|truncatechars:100 }}</p>
             <a href="{% url 'news_detail' n.id %}" class="btn btn-primary btn-sm w-100">Read More</a>
           </div>

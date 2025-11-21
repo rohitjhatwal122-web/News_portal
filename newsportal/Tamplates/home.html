@@ -10,10 +10,11 @@
   <div class="mb-5">
     <h2 class="text-center mb-3">🎬 Featured News Video</h2>
     <div class="text-center mb-3">
-      <video width="80%" height="400" controls class="rounded shadow-sm">
-        <source src="{{ featured_video.video_file.url }}" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
+     <video controls preload="metadata" class="rounded shadow-sm featured-video">
+    <source src="{{ featured_video.video_file.url }}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
       <h4 class="mt-2">{{ featured_video.title }}</h4>
       <p>{{ featured_video.description|truncatewords:20 }}</p>
     </div>
@@ -25,14 +26,20 @@
 
   <!-- 🌟 Hero Section -->
   {% if hero_news %}
-  <div id="heroCarousel" class="carousel slide mb-5 shadow" data-bs-ride="carousel">
+  <div id="heroCarousel" 
+       class="carousel slide mb-5 shadow" 
+       data-bs-ride="carousel"
+       data-bs-interval="5000">  <!-- ⬅️ TIME ADDED -->
+
     <div class="carousel-inner rounded-4 overflow-hidden">
       {% for news in hero_news %}
       <div class="carousel-item {% if forloop.first %}active{% endif %}">
         <img src="{{ news.heading_image.url }}" class="d-block w-100" alt="{{ news.heading }}" style="max-height: 480px; object-fit: cover;">
+        
         <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-1">
           <h2 class="fw-bold">{{ news.heading }}</h2>
           <p>{{ news.description|truncatewords:20 }}</p>
+
           {% if user_has_active_plan %}
             <a href="{% url 'news_detail' news.id %}" class="btn btn-primary">Read More</a>
           {% else %}
@@ -49,34 +56,63 @@
     <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
       <span class="carousel-control-next-icon"></span>
     </button>
+
   </div>
-  {% else %}
+{% else %}
   <p class="text-muted text-center">No featured news available.</p>
-  {% endif %}
+{% endif %}
 
-  <!-- 🔹 Slim Category Scroll Bar (YouTube style) -->
+  <!-- 🔹 Slim Category Scroll Bar -->
   <div class="bg-light py-1 mb-3 border-top border-bottom shadow-sm" 
-       style="white-space: nowrap; border-bottom: 3px solid #ccc;">
-    <div class="d-flex overflow-auto px-2" style="gap: 0.4rem;">
-      <a href="{% url 'home' %}" 
-         class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
-      {% for cat in categories %}
-        <a href="?category={{ cat }}" 
-           class="btn btn-sm {% if cat == selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
-           {{ cat }}
-        </a>
-      {% endfor %}
-    </div>
-  </div>
+     style="white-space: nowrap; border-bottom: 1px solid #ccc;">
+  <div class="d-flex overflow-auto px-2 custom-scroll" style="gap: 0.4rem;">
+    <a href="{% url 'home' %}" 
+       class="btn custom-btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
+       All
+    </a>
 
-  <!-- 👤 User Greeting -->
+    {% for cat in categories %}
+      <a href="?category={{ cat }}" 
+         class="btn custom-btn {% if cat == selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
+         {{ cat }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+/* Bigger button size */
+.custom-btn {
+    padding: 12px 16px;     /* height + width */
+    font-size: 0.90rem;    /* slightly bigger text */
+    border-radius: 6px;
+}
+
+/* Chrome, Safari, Edge */
+.custom-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Firefox */
+.custom-scroll {
+    scrollbar-width: none;
+}
+
+/* All browsers */
+.custom-scroll {
+    -ms-overflow-style: none;
+}
+</style>
+
+
+  {% comment %} <!-- 👤 User Greeting -->
   {% if user.is_authenticated %}
     <h2>Welcome, {{ request.user.first_name }} {% if request.user.userprofile %}{{ request.user.userprofile.role }}{% endif %} 👋</h2>
   {% else %}
     <p>Welcome, Guest</p>
-  {% endif %}
+  {% endif %} {% endcomment %}
 
-  <hr class="my-5">
+  {% comment %} <hr class="my-5"> {% endcomment %}
 
   <!-- 📰 Latest News Section -->
   {% if selected_category %}
@@ -97,6 +133,15 @@
         <div class="card-body">
           <h5 class="card-title">{{ news.heading }}</h5>
           <p class="card-text text-muted">{{ news.description|truncatechars:100 }}</p>
+
+          <!-- 🕒 Date, Time & Author Info -->
+          <div class="text-muted mb-2" style="font-size: 0.9rem;">
+            <i class="bi bi-calendar3"></i> {{ news.published_at|date:"d M Y" }}
+            <span class="mx-1">|</span>
+            <i class="bi bi-clock"></i> {{ news.published_at|time:"h:i A" }}
+            <span class="mx-1">|</span>
+             {{ news.author.get_full_name|default:news.author.username|default:"Unknown" }}
+          </div>
 
           {% if user_has_active_plan %}
             <a href="{% url 'news_detail' news.id %}" class="btn btn-primary w-100">Read More</a>
@@ -125,3 +170,22 @@
 
 </div>
 {% endblock %}
+
+<!-- 🎨 Style -->
+<style>
+.featured-video {
+    width: 800px;
+    height: 200px;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .featured-video {
+      width: 100%;
+      height: auto;
+  }
+}
+</style>
+
+<!-- 🧩 Bootstrap Icons (for calendar, clock, person icons) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">

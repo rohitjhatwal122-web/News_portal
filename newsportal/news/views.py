@@ -22,6 +22,15 @@ from django.db.models import Q
 
 # ================================register view=====================================
 
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from .models import UserProfile
+from django.core.mail import EmailMessage
+from django.conf import settings
+
 def register(request):
     if request.method == "POST":
         first_name = request.POST.get('first_name')
@@ -55,10 +64,25 @@ def register(request):
             profile.role = role.lower()
         profile.save()
 
-        messages.success(request, "Registration successful!")
+        # ✅ HTML email bhejna
+        try:
+            html_email = EmailMessage(
+                subject='Welcome to Our Site! 🎉',
+                body=f'<h2>Hello {first_name},</h2><p>Thanks for registering on our website!</p>',
+                from_email=settings.EMAIL_HOST_USER,
+                to=[email],
+            )
+            html_email.content_subtype = 'html'  # HTML content type
+            html_email.send()
+        except Exception as e:
+            print(f"Email could not be sent: {e}")
+
+        messages.success(request, "Registration successful! Please check your email.")
         return redirect('login')
 
     return render(request, 'register.html')
+
+
 
 # ===============================================login view=====================================
 
@@ -132,7 +156,8 @@ def user_table(request):
         return render(request, 'plans.html', {'plans': plans})
     
     else:
-        return redirect("create_news")  # Corrected the redirect statement
+        return redirect("create_news") 
+    
 
 
 # ==================================subscription_plans view=====================================
@@ -300,7 +325,7 @@ def home(request):
 
 def send_test_email(request):
     subject = "Test Django"
-    message = "abcdeefghifghjkjklmnopqrstuvwxyz ."
+    message = "abcdeefghertyuifghjkjklmnopqrstuvwxyz ."
     from_email = settings.EMAIL_HOST_USER
     recipient_list = ["rohitjhatwal230@gmail.com"]
 
@@ -393,15 +418,207 @@ def search_news(request):
 
 
 # ==================================NewsVideo========================
-from django.shortcuts import render
-from .models import NewsVideo
+from django.shortcuts import render, get_object_or_404
+from .models import NewsVideo, NewsTable
 
+# 🏠 Home page view — show featured and all videos
 def news_video(request):
     videos = NewsVideo.objects.order_by('-uploaded_at')
-    featured_video = videos.first() if videos else None
-    return render(request, 'home.html', {'featured_video': featured_video})
+    featured_video = videos.first() if videos.exists() else None
 
-# Gallery page view - show all videos
+    return render(request, 'home.html', {
+        'featured_video': featured_video,
+        'videos': videos,  # send all videos too
+    })
+
+
+# 🎞️ Gallery page view — show all videos in grid
 def video_gallery(request):
     videos = NewsVideo.objects.order_by('-uploaded_at')
-    return render(request, 'gallery.html', {'videos': videos})
+    return render(request, 'gallery.html', {
+        'videos': videos
+    })
+
+
+# 🎬 Video detail page — play video + show related
+def video_detail(request, video_id):
+    video = get_object_or_404(NewsVideo, id=video_id)
+
+    # Related Videos
+    related_videos = NewsVideo.objects.filter(
+        category=video.category
+    ).exclude(id=video.id)[:6]
+
+    # Related News Articles from NewsTable 
+    related_news = NewsTable.objects.filter(
+        category=video.category,
+        is_deleted=False
+    ).order_by('-published_at')[:6]
+
+    return render(request, "video_detail.html", {
+        "video": video,
+        "related_videos": related_videos,
+        "related_news": related_news,
+    })
+
+
+
+
+def video_list(request):
+    videos = NewsVideo.objects.filter(is_featured=False).order_by('-uploaded_at')
+    return render(request, 'video_list.html', {'videos': videos})
+
+
+
+# ===================================forgot_password view=========================================
+
+import random
+from django.core.mail import EmailMessage
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import render, redirect
+
+def forgot_password(request):
+    if request.method == "POST":
+        email = request.POST.get('email')
+
+        if not User.objects.filter(email=email).exists():
+            messages.error(request, "Email not found!")
+            return redirect('forgot_password')
+
+        # Generate 6 digit OTP
+        otp = random.randint(100000, 999999)
+
+        # Session me save karna
+        request.session['reset_email'] = email
+        request.session['reset_otp'] = str(otp)
+
+        # Send OTP
+        html_body = f"""
+        <h3>Your OTP Code</h3>
+        <p>Your password reset OTP is: <strong>{otp}</strong></p>
+        """
+
+        email_message = EmailMessage(
+            "Password Reset OTP",
+            html_body,
+            settings.EMAIL_HOST_USER,
+            [email],
+        )
+        email_message.content_subtype = 'html'
+        email_message.send()
+
+        messages.success(request, "OTP sent to your email!")
+        return redirect('verify_otp')
+
+    return render(request, 'forgot_password.html')
+
+
+# ===================================verify_otp view=========================================
+
+def verify_otp(request):
+    if request.method == "POST":
+        entered_otp = request.POST.get('otp')
+        saved_otp = request.session.get('reset_otp')
+
+        if entered_otp == saved_otp:
+            return redirect('reset_password')
+        else:
+            messages.error(request, "Invalid OTP!")
+            return redirect('verify_otp')
+
+    return render(request, 'verify_otp.html')
+
+
+# ===================================reset_password view=========================================
+
+
+from django.contrib.auth.hashers import make_password
+
+def reset_password(request):
+    if request.method == "POST":
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match!")
+            return redirect('reset_password')
+
+        email = request.session.get('reset_email')
+        user = User.objects.get(email=email)
+        user.password = make_password(password)
+        user.save()
+
+        # Clear session
+        request.session.pop('reset_email', None)
+        request.session.pop('reset_otp', None)
+
+        messages.success(request, "Password reset successful! Please login.")
+        return redirect('login')
+
+    return render(request, 'reset_password.html')
+
+
+
+from .models import NewsVideo
+
+
+@login_required(login_url='login')
+def upload_video(request):
+
+    # ✅ Check if user has an active and paid subscription
+    user_has_active_plan = SubscriptionTable.objects.filter(
+        user=request.user,
+        payment_status='paid',
+        status='active'
+    ).exists()
+
+    if not user_has_active_plan:
+        messages.warning(request, "You cannot upload videos until your payment is approved by admin.")
+        return redirect('plans')
+
+    # Get category choices
+    category_choices = [choice[0] for choice in NewsVideo._meta.get_field('category').choices]
+
+    # -------------------------
+    # ✅ When form submitted
+    # -------------------------
+    if request.method == "POST":
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        category = request.POST.get('category')
+        video_file = request.FILES.get('video_file')
+        thumbnail = request.FILES.get('thumbnail')
+        is_featured = 'is_featured' in request.POST
+
+        # -------------------------
+        # ✅ Validate required fields
+        # -------------------------
+        if not all([title, description, video_file]):
+            messages.error(request, "Please fill all required fields before submitting.")
+            return redirect('upload_video')
+
+        # -------------------------
+        # ✅ Save video to database
+        # -------------------------
+        NewsVideo.objects.create(
+            title=title,
+            description=description,
+            category=category,
+            video_file=video_file,
+            thumbnail=thumbnail,
+            is_featured=is_featured,
+            author=request.user
+        )
+
+        messages.success(request, "🎉 Video uploaded successfully!")
+        return redirect('video_list')
+
+    # -------------------------
+    # Page Load
+    # -------------------------
+    return render(request, "News_video.html", {
+        "user_has_active_plan": user_has_active_plan,
+        "category_choices": category_choices
+    })

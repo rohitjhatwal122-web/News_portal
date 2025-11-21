@@ -1,0 +1,63 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block title %}Upload New Video{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    
+    <h2 class="mb-4 text-center">📤 Upload New Video</h2>
+
+    <div class="card p-4 shadow-sm">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label class="form-label">Video Title</label>
+                <input type="text" name="title" class="form-control" placeholder="Enter video title" required>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4" placeholder="Enter video description"></textarea>
+            </div>
+
+            <!-- Video Upload -->
+            <div class="mb-3">
+                <label class="form-label">Upload Video File</label>
+                <input type="file" name="video_file" class="form-control" required>
+            </div>
+
+            <!-- Thumbnail Upload -->
+            <div class="mb-3">
+                <label class="form-label">Thumbnail Image</label>
+                <input type="file" name="thumbnail" class="form-control">
+            </div>
+
+            <!-- Category Select -->
+            <div class="mb-3">
+                <label class="form-label">Select Category</label>
+                <select name="category" class="form-select" required>
+                    {% for value, label in CATEGORY_CHOICES %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Featured Checkbox -->
+            <div class="form-check mb-3">
+                <input class="form-check-input" name="is_featured" type="checkbox" id="featureCheck">
+                <label class="form-check-label" for="featureCheck">
+                    Mark as Featured Video
+                </label>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary w-100">Upload Video</button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

@@ -77,5 +77,22 @@ from .models import NewsVideo
 
 @admin.register(NewsVideo)
 class NewsVideoAdmin(admin.ModelAdmin):
-    list_display = ('title', 'uploaded_at')
-    search_fields = ('title',)
+    list_display = (
+        'title',
+        'category',
+        'author',
+        'is_featured',
+        'uploaded_at',
+    )
+    list_filter = (
+        'category',
+        'is_featured',
+        'uploaded_at',
+    )
+    search_fields = (
+        'title',
+        'description',
+        'author__username',
+    )
+    readonly_fields = ('uploaded_at',)
+    ordering = ('-uploaded_at',)

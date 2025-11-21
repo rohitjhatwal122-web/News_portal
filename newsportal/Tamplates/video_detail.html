@@ -1,0 +1,163 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %}{{ video.title }}{% endblock %}
+
+{% block content %}
+
+<style>
+.detail-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    {% comment %} border: 1px solid #ddd; {% endcomment %}
+}
+
+/* Big Video Player */
+.video-player {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    height: 420px;
+    object-fit: cover;
+}
+
+/* Meta Line */
+.meta-line {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+/* Title */
+.video-title {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* ✔ FIXED DESCRIPTION */
+.description {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #444;
+    margin-top: 15px;
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    display: block;
+}
+
+/* Related Section */
+.related-box {
+    margin-top: 40px;
+}
+
+.related-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.related-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    {% comment %} border: 1px solid #ddd; {% endcomment %}
+    cursor: pointer;
+}
+
+.related-item:hover {
+    background: #f5f5f5;
+}
+
+.related-thumb {
+    width: 150px;
+    height: 90px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.related-info h4 {
+    font-size: 17px;
+    margin: 0;
+}
+
+.related-info p {
+    font-size: 13px;
+    color: #777;
+}
+</style>
+
+
+
+<div class="detail-container">
+
+    <!-- MAIN VIDEO -->
+    <video class="video-player" controls 
+       {% if video.thumbnail %}
+           poster="{{ video.thumbnail.url }}"
+       {% endif %}>
+        <source src="{{ video.video_file.url }}" type="video/mp4">
+    </video>
+
+    <!-- META -->
+    <div class="meta-line">
+        {{ video.author }} • {{ video.uploaded_at|date:"d M Y" }} • {{ video.uploaded_at|time:"h:i A" }}
+    </div>
+
+    <!-- TITLE -->
+    <h1 class="video-title">{{ video.title }}</h1>
+
+    <!-- ✔ FIXED DESCRIPTION WITH PROPER LINE BREAKS -->
+    <div class="description">
+        {{ video.description|linebreaks }}
+    </div>
+
+    <!-- RELATED VIDEOS -->
+    {% if related_videos %}
+    <div class="related-box">
+        <h3 class="related-title">Related Videos</h3>
+
+        {% for rv in related_videos %}
+        <a href="{% url 'video_detail' rv.id %}" style="text-decoration:none; color:inherit;">
+            <div class="related-item">
+                <img src="{% if rv.thumbnail %}{{ rv.thumbnail.url }}{% else %}{{ rv.video_file.url }}{% endif %}" class="related-thumb">
+
+                <div class="related-info">
+                    <h4>{{ rv.title }}</h4>
+                    <p>{{ rv.uploaded_at|date:"d M Y" }}</p>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- RELATED NEWS -->
+    {% if related_news %}
+    <div class="related-box">
+        <h3 class="related-title">Related News</h3>
+
+        {% for n in related_news %}
+        <a href="{% url 'news_detail' n.id %}" style="text-decoration:none; color:inherit;">
+            <div class="related-item">
+                <img src="{{ n.heading_image.url }}" class="related-thumb">
+
+                <div class="related-info">
+                    <h4>{{ n.heading }}</h4>
+                    <p>{{ n.published_at|date:"d M Y" }}</p>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
